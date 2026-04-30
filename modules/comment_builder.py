@@ -36,13 +36,17 @@ def get_next_closer(account):
 # =========================
 # BUILD COMMENT
 # =========================
-def build_comment(account, phase_ii):
+def build_comment(thread, phase_ii, account):
     opener = get_next_opener(account)
     closer = get_next_closer(account)
 
     comment = f"{opener}\n\n{phase_ii}\n\n{closer}"
 
-    return comment, opener, closer
+    return {
+        "comment": comment,
+        "opener": opener,
+        "closer": closer
+    }
 
 
 # =========================

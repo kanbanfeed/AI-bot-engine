@@ -24,7 +24,7 @@ def extract_phase_ii(full_text):
 
         phase_ii = match.group(1).strip()
 
-        # 🔥 CLEANING (PRODUCTION FIXES)
+        #  CLEANING (PRODUCTION FIXES)
         phase_ii = re.sub(r"Kill Point", "", phase_ii, flags=re.IGNORECASE)
         phase_ii = phase_ii.encode("utf-8", "ignore").decode("utf-8")
         phase_ii = re.sub(r"\n+", "\n", phase_ii)
@@ -101,10 +101,12 @@ def call_spear_api(thread, account_id=None):
         full_output = data.get("output", "")
 
         # Extract Phase II
+        print("\n[DEBUG] FULL API OUTPUT:\n", full_output)
+
         phase_ii = extract_phase_ii(full_output)
 
         if not phase_ii:
-            log_action_error(account_id, thread.get("url"), "Phase II extraction failed")
+            print("\n[ERROR] Phase II extraction failed")
             return None
 
         # Validate

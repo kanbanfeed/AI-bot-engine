@@ -349,3 +349,38 @@ def get_account_daily_post_count(account_id):
     Database.release_connection(conn)
 
     return count
+
+
+def get_pending_actions():
+    conn = Database.get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT action_id, thread_url
+        FROM actions
+        WHERE posted_ok = false
+        AND error_message = 'pending_post'
+    """)
+
+    rows = cur.fetchall()
+
+    return [
+        {
+            "action_id": r[0],
+            "thread_url": r[1]
+        }
+        for r in rows
+    ]
+
+
+def mark_action_responded(action_id):
+    conn = Database.get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE actions
+        SET elevation_triggered = true
+        WHERE action_id = %s
+    """, (action_id,))
+
+    conn.commit()

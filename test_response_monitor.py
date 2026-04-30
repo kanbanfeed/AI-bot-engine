@@ -1,0 +1,3 @@
+from modules.response_monitor import check_for_responses
+
+check_for_responses()

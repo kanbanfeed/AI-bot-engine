@@ -5,22 +5,37 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Database:
     _connection_pool = None
 
     @staticmethod
     def initialize():
         try:
-            Database._connection_pool = psycopg2.pool.SimpleConnectionPool(
-                minconn=1,
-                maxconn=10,
-                host=os.getenv("DB_HOST"),
-                port=os.getenv("DB_PORT"),
-                database=os.getenv("DB_NAME"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD")
-            )
+            database_url = os.getenv("DATABASE_URL")
+
+            # PRODUCTION MODE (Railway)
+            if database_url:
+                Database._connection_pool = psycopg2.pool.SimpleConnectionPool(
+                    minconn=1,
+                    maxconn=10,
+                    dsn=database_url
+                )
+
+            # LOCAL MODE (.env)
+            else:
+                Database._connection_pool = psycopg2.pool.SimpleConnectionPool(
+                    minconn=1,
+                    maxconn=10,
+                    host=os.getenv("DB_HOST"),
+                    port=os.getenv("DB_PORT"),
+                    database=os.getenv("DB_NAME"),
+                    user=os.getenv("DB_USER"),
+                    password=os.getenv("DB_PASSWORD")
+                )
+
             print("Database connection pool created")
+
         except Exception as e:
             print("Error creating connection pool:", str(e))
             raise e
@@ -40,4 +55,4 @@ class Database:
     def close_all():
         if Database._connection_pool:
             Database._connection_pool.closeall()
-            print(" Database connections closed")
+            print("Database connections closed")

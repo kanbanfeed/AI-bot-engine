@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, timedelta
+import praw
 
 from db.queries import (
     insert_action,
@@ -11,14 +12,12 @@ from db.queries import (
 
 
 # =========================
-# CHECK DAILY LIMIT
+# DAILY LIMIT CHECK
 # =========================
 def check_daily_limit(account):
     config = get_global_config()
-
     karma = account.get("karma_points", 0)
 
-    # determine tier
     if karma < 25:
         limit = int(config.get("karma_tier_1_limit"))
     elif karma < 50:
@@ -39,12 +38,11 @@ def check_daily_limit(account):
         limit = int(config.get("karma_tier_9_limit"))
 
     posts_today = get_account_daily_post_count(account["account_id"])
-
     return posts_today < limit
 
 
 # =========================
-# CHECK POST DELAY
+# POST DELAY CHECK
 # =========================
 def check_post_delay(account):
     config = get_global_config()
@@ -59,21 +57,41 @@ def check_post_delay(account):
 
 
 # =========================
-# MOCK POST (TEMP)
+# REAL REDDIT POST
 # =========================
+# def post_to_reddit(thread_url, comment, account):
+#     try:
+#         import praw
+
+#         reddit = praw.Reddit(
+#             client_id="dummy",
+#             client_secret="dummy",
+#             username=account["username"],
+#             password=account["password"],
+#             user_agent=f"{account['site']}_engine_v1"
+#         )
+
+#         submission = reddit.submission(url=thread_url)
+
+#         print(f"\n[POSTING] {account['username']} -> {thread_url}")
+
+#         submission.reply(comment)
+
+#         time.sleep(5)
+
+#         return True, None
+
+#     except Exception as e:
+#         return False, str(e)
+
 def post_to_reddit(thread_url, comment, account):
-    """
-    TEMP MOCK — replace later with PRAW login
-    """
-    print(f"\n[POSTING] {account['username']} -> {thread_url}")
-    print(comment[:100], "...\n")
+    print(f"\n[SIMULATED POST] {account['username']} -> {thread_url}")
+    print(comment[:120], "...\n")
 
-    # simulate success
-    return True, None
-
+    return True, "pending_post"
 
 # =========================
-# MAIN POST FUNCTION
+# MAIN FUNCTION
 # =========================
 def post_comment(site, thread, comment_data):
     account = get_account_by_site(site)
@@ -81,24 +99,18 @@ def post_comment(site, thread, comment_data):
     if not account:
         return False, "No account found"
 
-    # Check limits
     if not check_daily_limit(account):
         return False, "Daily limit reached"
 
     if not check_post_delay(account):
         return False, "Post delay not met"
 
-    # Proxy (not implemented yet)
-    proxy = account.get("proxy_address")
-
-    # POST
     success, error = post_to_reddit(
         thread["url"],
         comment_data["comment"],
         account
     )
 
-    # LOG BEFORE & AFTER
     insert_action({
         "account_id": account["account_id"],
         "platform": "reddit",
@@ -107,8 +119,9 @@ def post_comment(site, thread, comment_data):
         "opener_used": comment_data["opener"],
         "closer_used": comment_data["closer"],
         "round_number": 1,
-        "posted_ok": success,
-        "error_message": error
+        "posted_ok": False,
+        "error_message": "pending_post"
+    
     })
 
     if success:

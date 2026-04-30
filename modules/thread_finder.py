@@ -98,7 +98,7 @@ def run_thread_finder():
 
                     thread_url = "https://www.reddit.com" + permalink
 
-                    # ✅ DUPLICATE CHECK (same run)
+                    # DUPLICATE CHECK (same run)
                     if thread_url in seen_urls:
                         continue
 
